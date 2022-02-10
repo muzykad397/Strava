@@ -1,0 +1,5 @@
+The data in this folder is my own.
+
+This is meant to be used for demonstration purposes if people viewing my code do not have their own data, or if they do not have access to the Strava API.
+
+This data was generated in the strava_import.rmd program in my repository "muzykad397/strava/r/strava_import.rmd"
