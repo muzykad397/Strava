@@ -1,0 +1,153 @@
+---
+title: "Strava Data Import"
+author: "Daniel Muzyka"
+date: "2/10/2022"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Importing data from Strava into R with basic cleaning
+#### Note, you must submit the code chunks through the import step before knitting. 
+#### You must manually authorize API access via the terminal and a prompted webpage
+
+Hello, this program is used to import data from the Strava API into R. If you do not already have a Strava API configured do a quick search on how to accomplish this. 
+
+This program contains the code to access the Strava API, but I also included some of my cleaned personal Strava data as an output if you would like to play around first.
+
+I have saved the outputs of this program to my repository:
+  "muzykad397/strava/data"
+
+## Libraries
+These are the libraries required in the data import and cleaning steps.
+
+```{r libraries, message=FALSE}
+library(tidyverse)
+library(httr)
+library(yaml)
+library(jsonlite)
+library(janitor)
+library(lubridate)
+```
+
+## The Import
+
+I cannot claim the API import code as my own. This was adapted from various online sources.
+
+**You must run up to this code chunk before knitting.** You will be required to authorize API access in the terminal.
+
+**You will have to provide you own client_id and secret code.** These can be found by logging into Strava on the API management page.
+
+If you do not have a Strava API, I have saved the output of this program to my repository:
+  "muzykad397/strava/data"
+
+```{r import}
+
+client_id <- client_id
+secret <- secret
+
+app <- oauth_app("strava", client_id, secret)
+endpoint <- oauth_endpoint(
+  request = NULL,
+  authorize = "https://www.strava.com/oauth/authorize",
+  access = "https://www.strava.com/oauth/token"
+)
+
+token <- oauth2.0_token(endpoint, app, as_header = FALSE,
+                        scope = "activity:read_all,activity:read,profile:read_all")
+
+df_list <- list()
+i <- 1
+done <- FALSE
+while (!done) {
+  req <- GET(
+    url = "https://www.strava.com/api/v3/athlete/activities",
+    config = token,
+    query = list(per_page = 200, page = i)
+  )
+  df_list[[i]] <- fromJSON(content(req, as = "text"), flatten = TRUE)
+  if (length(content(req)) < 200) {
+    done <- TRUE
+  } else {
+    i <- i + 1
+  }
+}
+
+strava <- rbind_pages(df_list)
+```
+
+## Basic cleaning of the data
+
+```{r clean imported data}
+strava_clean <- strava %>% clean_names() %>% 
+  mutate(start_date = ymd_hms(start_date)) %>% 
+  #I would like to convert all measurements from metric to imperial
+    #distance in miles (meters ->miles)
+      mutate(.,distance=distance*0.000621371) %>% 
+    #elevation gain in feet (meters -> feet)
+      mutate(.,total_elevation_gain=total_elevation_gain*3.28084) %>% 
+    #elevation high in feet (meters -> feet)
+      mutate(.,elev_high=elev_high*3.28084) %>% 
+    #elevation low in feet (meters -> feet)
+      mutate(.,elev_low=elev_low*3.28084) %>% 
+    #average_speed in mph (m/s -> mph)
+      mutate(.,average_speed=average_speed*2.23694) %>% 
+    #max_speed in mph (m/s -> mph)
+      mutate(.,max_speed=max_speed*2.23694) %>% 
+  #Pull out month from start date
+  mutate(.,month=format(.$start_date,"%m")) %>% 
+  #the next bit of logic is to set a 'season' variable for my winter sports
+    #this will be used for 'Season to date' calculations. 
+    #Think 'year to date', but the winter season spans over the new year
+    #I picked July as the cut off. Seems reasonable to me unless I find the funds to chase winter around the globe
+  mutate(.,season = ifelse(
+                            as.numeric(format(.$start_date,"%m")) <=7, 
+        #if before July then current year is 2nd half of season
+                                paste0(
+                                  (as.numeric(format(.$start_date,"%Y"))-1),
+                                   "/",
+                                   format(.$start_date,"%Y"),
+                                   " season"),
+        #if after July then current year is 1st half of season
+                                paste0(
+                                  format(.$start_date,"%Y"),
+                                   "/",
+                                   (as.numeric(format(.$start_date,"%Y"))+1),
+                                   " season")
+                            )
+            )  %>% 
+  #month_order will be used later in graphing for the winter sports season
+    #If I am doing season to date graphing I wont want order to be 1:12, I want 8:12,1:7
+ mutate(.,month_order = ifelse(
+                            as.numeric(month) <=7, 
+        #if before July then current year is 2nd half of season
+                                as.numeric(month)+5,
+        #if after July then current year is 1st half of season
+                               as.numeric(month)-7
+                            )
+            ) %>% 
+  #To simplify reviewing the data I only kept variables of interest
+    #For the output I save for public use I will drop the latitude and longitude
+  select(.,distance:type, start_date,month, month_order, achievement_count,start_latlng:max_speed,elev_high, elev_low, pr_count,season)
+```
+
+## Saving data for later use (to be accessed if skipping API)
+
+I have saved the outputs of this program to my repository:
+  "muzykad397/strava/data"
+
+```{r, save data}
+#I will be dropping Latitude and Longitude data before posting publicly
+
+#I will save as an R data set here
+strava_clean %>% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %>% 
+    save(., file = "D:/Users/Danny/Documents/GitHub/strava/data/strava.RData")
+
+#I will save as csv for importing to other languages (like sas)
+strava_clean %>% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %>% 
+    write.csv(., file = "D:/Users/Danny/Documents/GitHub/strava/data/strava.csv")
+```
+
