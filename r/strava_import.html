@@ -209,12 +209,9 @@ endpoint &lt;- oauth_endpoint(
 )
 
 token &lt;- oauth2.0_token(endpoint, app, as_header = FALSE,
-                        scope = &quot;activity:read_all,activity:read,profile:read_all&quot;)</code></pre>
-<pre><code>## Adding .httr-oauth to .gitignore</code></pre>
-<pre><code>## Waiting for authentication in browser...</code></pre>
-<pre><code>## Press Esc/Ctrl + C to abort</code></pre>
-<pre><code>## Authentication complete.</code></pre>
-<pre class="r"><code>df_list &lt;- list()
+                        scope = &quot;activity:read_all,activity:read,profile:read_all&quot;)
+
+df_list &lt;- list()
 i &lt;- 1
 done &lt;- FALSE
 while (!done) {
@@ -292,8 +289,8 @@ strava_raw &lt;- rbind_pages(df_list)</code></pre>
 <pre class="r"><code>#I will be dropping Latitude and Longitude data before posting publicly
 
 #I will save as an R data set here
-strava %&gt;% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %&gt;% 
-    save(., file = &quot;D:/Users/Danny/Documents/GitHub/strava/data/strava.RData&quot;)
+strava %&gt;% select(., -start_latlng, -end_latlng, -start_latitude, -start_longitude) %&gt;% 
+    saveRDS(., file = &quot;D:/Users/Danny/Documents/GitHub/strava/data/strava.RDS&quot;)
 
 #I will save as csv for importing to other languages (like sas)
 strava %&gt;% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %&gt;% 
