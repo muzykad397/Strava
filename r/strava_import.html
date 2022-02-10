@@ -231,11 +231,11 @@ while (!done) {
   }
 }
 
-strava &lt;- rbind_pages(df_list)</code></pre>
+strava_raw &lt;- rbind_pages(df_list)</code></pre>
 </div>
 <div id="basic-cleaning-of-the-data" class="section level2">
 <h2>Basic cleaning of the data</h2>
-<pre class="r"><code>strava_clean &lt;- strava %&gt;% clean_names() %&gt;% 
+<pre class="r"><code>strava &lt;- strava_raw %&gt;% clean_names() %&gt;% 
   mutate(start_date = ymd_hms(start_date)) %&gt;% 
   #I would like to convert all measurements from metric to imperial
     #distance in miles (meters -&gt;miles)
@@ -292,11 +292,11 @@ strava &lt;- rbind_pages(df_list)</code></pre>
 <pre class="r"><code>#I will be dropping Latitude and Longitude data before posting publicly
 
 #I will save as an R data set here
-strava_clean %&gt;% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %&gt;% 
+strava %&gt;% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %&gt;% 
     save(., file = &quot;D:/Users/Danny/Documents/GitHub/strava/data/strava.RData&quot;)
 
 #I will save as csv for importing to other languages (like sas)
-strava_clean %&gt;% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %&gt;% 
+strava %&gt;% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %&gt;% 
     write.csv(., file = &quot;D:/Users/Danny/Documents/GitHub/strava/data/strava.csv&quot;)</code></pre>
 </div>
 </div>

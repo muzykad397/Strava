@@ -76,13 +76,13 @@ while (!done) {
   }
 }
 
-strava <- rbind_pages(df_list)
+strava_raw <- rbind_pages(df_list)
 ```
 
 ## Basic cleaning of the data
 
 ```{r clean imported data}
-strava_clean <- strava %>% clean_names() %>% 
+strava <- strava_raw %>% clean_names() %>% 
   mutate(start_date = ymd_hms(start_date)) %>% 
   #I would like to convert all measurements from metric to imperial
     #distance in miles (meters ->miles)
@@ -143,11 +143,11 @@ I have saved the outputs of this program to my repository:
 #I will be dropping Latitude and Longitude data before posting publicly
 
 #I will save as an R data set here
-strava_clean %>% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %>% 
+strava %>% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %>% 
     save(., file = "D:/Users/Danny/Documents/GitHub/strava/data/strava.RData")
 
 #I will save as csv for importing to other languages (like sas)
-strava_clean %>% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %>% 
+strava %>% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %>% 
     write.csv(., file = "D:/Users/Danny/Documents/GitHub/strava/data/strava.csv")
 ```
 
