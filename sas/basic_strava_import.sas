@@ -1,3 +1,9 @@
+*************************************************************************************************************;
+/* PGM:basic_strava_import.sas */
+/* Coder:Daniel Muzyka */
+/* Date:2/17/2022*/
+/* Description:A super simple import of my Strava data that is saved on Github*/
+*************************************************************************************************************;
 filename git temp;
 
 proc http url="https://github.com/muzykad397/strava/raw/main/data/strava.csv" 
