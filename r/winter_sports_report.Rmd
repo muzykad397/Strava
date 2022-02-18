@@ -1,0 +1,94 @@
+---
+title: "Winter Sports Report"
+author: "Daniel Muzyka"
+date: "2/17/2022"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Libraries
+
+```{r, libraries, message=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+## Reading in Data
+
+Pulling my data straight from Github and filtering to specified winter sports activities.
+
+
+```{r}
+strava <- readRDS(gzcon(url("https://github.com/muzykad397/strava/blob/main/data/strava.RDS?raw=true")))
+
+#set a list of wintersports activities I commonly use. Update to your needs.
+
+winter_activities <- c("NordicSki","AlpineSki","Snowboard","Snowshoe")
+
+winter_sports <- strava %>% filter(., type %in% winter_activities) %>% mutate(., date=date(start_date))
+
+```
+
+## High level Summary
+
+How many days did I spend doing winter sports each season?
+
+* disclaimer - I did not record all snowboarding trips in then 20/21 season)
+  
+#### Overall Winter Sports Days
+```{r}
+#overall number of days spent participating in winter sports by season
+  winter_sports  %>%
+      group_by(season) %>% summarize(winter_sport_days = n_distinct(date))
+```
+
+#### Days by Individual Sport
+
+```{r}
+#days spent on each type of winter sport
+  winter_sports %>% 
+      group_by(season,type) %>% summarize(number_of_day_by_activity = n_distinct(date),.groups = 'drop')
+```
+
+#### Count of Full Day Activity
+
+Some days I participated in more than one sport. This summary reflects that.
+```{r}
+#some logic to roll up activities in a single day.
+      #Example 1 - I Nordic ski and snowboard in the same day
+      #Example 2 - I switch between Alpine Ski and Snowboarding in the same day
+      #Example 3 - I recorded two Nordic Skis in one day (this is already accounted for in the summaries above)
+      #Example 4 - I Snowshoe, Nordic Ski, and Snowboard all in one day! (will work but the category will have funky                     grammar)
+combos <- winter_sports  %>%
+  #sort order is imperative for lead+lag and also for binding_cols in a future step
+  arrange(.,date) %>% 
+  mutate(.,combo=case_when(
+    #logic to create the combinations
+    lead(date) == date & lead(type) != type ~ paste0(lead(type)," and ",type),
+    lag(date) == date & lag(type) != type ~ paste0(lag(type)," and ",type),
+    #some safety logic to account for Example 3 above
+    lead(date) == date & lead(type) == type ~ type,
+    lag(date) == date & lag(type) == type ~ type,
+    TRUE ~ type
+    ))
+
+#Here I am making sure that my Combo days all follow the same format
+  #If I ski then snowboard one day, and snowboard then ski on another, the lead+lag logic will create different          categories
+  #To make sure things are conistent I will parse the combo field, sort the strings, then concatenate back together
+ combos2 <-   str_split(combos$combo," and ") %>% lapply(.,str_sort) %>% 
+      sapply(., paste, collapse = " and ")  %>% as.data.frame() %>% 
+   transmute(.,full_day_activity_type= case_when(
+    grepl("and",.) ~ paste0("Combo ",.),
+    TRUE ~ .
+   ))
+
+ #bind the new column back on and roll up to full day summaries
+  #make sure to preserve sort order from above because I am binding rows, not joining
+ bind_cols(combos, combos2) %>% group_by(season,full_day_activity_type) %>% summarize(number_of_days = n_distinct(date),.groups = 'drop')
+
+
+```
