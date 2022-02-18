@@ -17,7 +17,7 @@ run;
 /*   out=work.strava replace */
 /*   dbms=csv; */
 /* run; */
-data want;
+data webwork.want;
 	infile git delimiter=',' MISSOVER DSD firstobs=2;
 	informat VAR1 $4.;
 	informat distance best32.;
