@@ -134,7 +134,8 @@ We can see that as of today I am neck-in-neck with last season's totals. The goo
 ```{r plooting season totals}
 
 summaries %>% 
-ggplot(.,aes(x=month)) +
+ggplot(.,aes(x=month)) + ggtitle("Cumulative X-Country Skiing Mileage") +
+   theme(plot.title = element_text(hjust = 0.5)) +
   geom_bar( aes(y=mileage,group=season,fill=season), stat="identity" , position="dodge") +
  geom_line( aes(y=cum_mileage, group=season, color=season),stat="identity", size=1) +
   
@@ -145,7 +146,8 @@ ggplot(.,aes(x=month)) +
   ) 
 
 summaries %>% 
-ggplot(.,aes(x=month)) +
+ggplot(.,aes(x=month)) + ggtitle("Cumulative X-Country Elevation Gain") +
+   theme(plot.title = element_text(hjust = 0.5)) +
   geom_bar( aes(y=elevation_gain,group=season,fill=season), stat="identity" , position="dodge") +
  geom_line( aes(y=cum_elevation, group=season, color=season),stat="identity", size=1) +
   
