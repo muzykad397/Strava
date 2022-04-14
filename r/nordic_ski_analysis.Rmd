@@ -129,7 +129,6 @@ summaries$month = with(summaries, reorder(month, month_order))
 
 Now that I have summarized data, I would like to plot it.
 
-We can see that as of today I am neck-in-neck with last season's totals. The good new is this is summarized by month and today is only the 10th of February!
 
 ```{r plooting season totals}
 
