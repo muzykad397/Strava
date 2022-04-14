@@ -143,11 +143,15 @@ I have saved the outputs of this program to my repository:
 #I will be dropping Latitude and Longitude data before posting publicly
 
 #I will save as an R data set here
-strava %>% select(., -start_latlng, -end_latlng, -start_latitude, -start_longitude) %>% 
+strava %>% select(., -start_latlng, -end_latlng
+                  #, -start_latitude, -start_longitude
+                  ) %>% 
     saveRDS(., file = "D:/Users/Danny/Documents/GitHub/strava/data/strava.RDS")
 
 #I will save as csv for importing to other languages (like sas)
-strava %>% select(.,-start_latlng, -end_latlng, -start_latitude,-start_longitude) %>% 
+strava %>% select(.,-start_latlng, -end_latlng
+                  #, -start_latitude,-start_longitude
+                  ) %>% 
     write.csv(., file = "D:/Users/Danny/Documents/GitHub/strava/data/strava.csv")
 ```
 
