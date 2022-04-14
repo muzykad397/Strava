@@ -88,7 +88,7 @@ combos <- winter_sports  %>%
 
  #bind the new column back on and roll up to full day summaries
   #make sure to preserve sort order from above because I am binding rows, not joining
- bind_cols(combos, combos2) %>% group_by(season,full_day_activity_type) %>% summarize(number_of_days = n_distinct(date),.groups = 'drop')
+ bind_cols(combos, combos2) %>% group_by(season,full_day_activity_type) %>% summarize(number_of_days = n_distinct(date),.groups = 'drop') %>% arrange(., season, desc(number_of_days))
 
 
 ```

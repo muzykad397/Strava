@@ -202,7 +202,7 @@ winter_sports &lt;- strava %&gt;% filter(., type %in% winter_activities) %&gt;% 
 ##   season           winter_sport_days
 ##   &lt;chr&gt;                        &lt;int&gt;
 ## 1 2020/2021 season                30
-## 2 2021/2022 season                38</code></pre>
+## 2 2021/2022 season                58</code></pre>
 </div>
 <div id="days-by-individual-sport" class="section level4">
 <h4>Days by Individual Sport</h4>
@@ -215,9 +215,9 @@ winter_sports &lt;- strava %&gt;% filter(., type %in% winter_activities) %&gt;% 
 ## 1 2020/2021 season NordicSki                        18
 ## 2 2020/2021 season Snowboard                        10
 ## 3 2020/2021 season Snowshoe                          4
-## 4 2021/2022 season AlpineSki                         9
-## 5 2021/2022 season NordicSki                        17
-## 6 2021/2022 season Snowboard                        13</code></pre>
+## 4 2021/2022 season AlpineSki                        20
+## 5 2021/2022 season NordicSki                        22
+## 6 2021/2022 season Snowboard                        22</code></pre>
 </div>
 <div id="count-of-full-day-activity" class="section level4">
 <h4>Count of Full Day Activity</h4>
@@ -252,19 +252,20 @@ combos &lt;- winter_sports  %&gt;%
 
  #bind the new column back on and roll up to full day summaries
   #make sure to preserve sort order from above because I am binding rows, not joining
- bind_cols(combos, combos2) %&gt;% group_by(season,full_day_activity_type) %&gt;% summarize(number_of_days = n_distinct(date),.groups = &#39;drop&#39;)</code></pre>
-<pre><code>## # A tibble: 9 x 3
-##   season           full_day_activity_type        number_of_days
-##   &lt;chr&gt;            &lt;chr&gt;                                  &lt;int&gt;
-## 1 2020/2021 season Combo NordicSki and Snowboard              1
-## 2 2020/2021 season Combo NordicSki and Snowshoe               1
-## 3 2020/2021 season NordicSki                                 16
-## 4 2020/2021 season Snowboard                                  9
-## 5 2020/2021 season Snowshoe                                   3
-## 6 2021/2022 season AlpineSki                                  8
-## 7 2021/2022 season Combo AlpineSki and Snowboard              1
-## 8 2021/2022 season NordicSki                                 17
-## 9 2021/2022 season Snowboard                                 12</code></pre>
+ bind_cols(combos, combos2) %&gt;% group_by(season,full_day_activity_type) %&gt;% summarize(number_of_days = n_distinct(date),.groups = &#39;drop&#39;) %&gt;% arrange(., season, desc(number_of_days))</code></pre>
+<pre><code>## # A tibble: 10 x 3
+##    season           full_day_activity_type        number_of_days
+##    &lt;chr&gt;            &lt;chr&gt;                                  &lt;int&gt;
+##  1 2020/2021 season NordicSki                                 16
+##  2 2020/2021 season Snowboard                                  9
+##  3 2020/2021 season Snowshoe                                   3
+##  4 2020/2021 season Combo NordicSki and Snowboard              1
+##  5 2020/2021 season Combo NordicSki and Snowshoe               1
+##  6 2021/2022 season NordicSki                                 21
+##  7 2021/2022 season Snowboard                                 17
+##  8 2021/2022 season AlpineSki                                 14
+##  9 2021/2022 season Combo AlpineSki and Snowboard              5
+## 10 2021/2022 season Combo AlpineSki and NordicSki              1</code></pre>
 </div>
 </div>
 
