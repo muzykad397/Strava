@@ -1,0 +1,122 @@
+---
+title: "Ski_Versus_Board"
+author: "Daniel Muzyka"
+date: "4/14/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Skiing Versus Snowboarding
+
+After a season of doing the leg work to collect data, I want to answer the question, "Am I a skier or a snowboarder"?
+
+## Loading Libraries
+
+```{r, libraries, message=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+## Import
+
+```{r import}
+strava <- readRDS(gzcon(url("https://github.com/muzykad397/strava/blob/main/data/strava.RDS?raw=true")))
+
+#set the list of downhill wintersports activities I want to compare.
+
+dh_activities <- c("AlpineSki","Snowboard")
+
+dh_sports <- strava %>% filter(., type %in% dh_activities) %>% mutate(., date=date(start_date))
+```
+
+## Limiting to 21/22 season
+
+There was one day where strava did not sync my data so I did a manual entry. I will remove it here.
+
+```{r}
+dh_sports <- dh_sports %>% filter(., season == "2021/2022 season") %>% filter (., max_speed != 0)
+```
+## Basic summaries
+
+```{r summaries}
+#days spent on each sport
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(number_of_days_by_activity = n_distinct(date),.groups = 'drop')
+
+#distance traveled for each sport
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(total_season_distance_miles = sum(distance),.groups = 'drop')
+  
+#Total moving time spent on each sport
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(time_spent_moving_hours = (sum(moving_time)/60**2),.groups = 'drop')
+  
+#Average distance traveled per day of activity
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(avg_daily_distance_miles = mean(distance),.groups = 'drop')
+
+#Average time spent per day
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(avg_daily_time_spent_moving_hours = (mean(moving_time)/60**2),.groups = 'drop')
+  
+#Average of the average daily speed
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(avg_avg_speed = mean(average_speed),.groups = 'drop')
+  
+#Average top speed of each day
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(avg_max_speed = mean(max_speed),.groups = 'drop')
+  
+#Max top speed of the season
+  dh_sports %>% 
+      group_by(season,type) %>% summarize(max_max_speed = max(max_speed),.groups = 'drop')
+  
+```
+## Max Speed Analysis
+
+There are issues comparing a lot of these metrics. Some days are longer than others. These days took place on various mountains with different terrains and sizes. Some days had better conditions. Some days I rode with different people. Some days involved alcohol.
+
+The only thing I can be sure of, is that everyday I had a need for speed. Regardless of what the overall day was like, there was at least one point, on one run, where I pointed my tip(s) downhill and let gravity do the work. So the value I want to perform statistical tests on is my daily max speed. 
+
+```{r}
+#simple box plot. One outlier snowboarding. I remember that exact run. It was fast.
+dh_sports %>% ggplot(., aes(type,max_speed)) +
+  geom_boxplot(aes(fill=type))
+
+#labeling the observations with a rank variable so I can plot in different orders
+obs= count(dh_sports)
+dh_sports <- dh_sports %>% arrange(., max_speed) %>% mutate(., rank=1:obs$n)
+dh_sports <- dh_sports  %>% arrange(., date) %>% mutate(., date_rank=1:obs$n)
+
+#Bring out the means so I can plot as reference lines on the graphs
+means <-   dh_sports %>% 
+      group_by(season,type) %>% summarize(avg_max_speed = mean(max_speed),.groups = 'drop')
+
+#plotted point in order of their ranking. 
+#This might be fun to illustrate rank if I do a test like a Wilcoxon ranked sums
+dh_sports %>% ggplot(., aes(rank,max_speed,type)) +
+  geom_point(aes(color=type)) +
+  geom_hline(data = means, aes(yintercept=avg_max_speed, color=type),
+             group="type", linetype='dashed')
+
+#This chart is looking at my speeds over time
+#The idea behind this one is that I just started skiing this year. Maybe I will see improvement
+#need to break into facets and change the reference line to show the slope of points
+dh_sports %>% ggplot(., aes(date_rank,max_speed,type)) +
+  geom_point(aes(color=type)) +
+  geom_hline(data = means, aes(yintercept=avg_max_speed, color=type),
+             group="type", linetype='dashed')
+
+```
+
+```{r, scatters}
+#scatter plot of date_rank and max_speed with a linear fit
+dh_sports %>% ggplot() + geom_point(aes(x=date_rank, y=max_speed, color=type, group=type)) + 
+  geom_smooth(aes(x=date_rank, y=max_speed, group=type, color=type),method=lm, formula=y~x, level=0.3)
+
+#scatter plot of date_rank and max_speed with a loess fit
+dh_sports %>% ggplot() + geom_point(aes(x=date_rank, y=max_speed, color=type, group=type)) + 
+  geom_smooth(aes(x=date_rank, y=max_speed, group=type, color=type),method=loess, formula=y~x, level=0.3)
+```
