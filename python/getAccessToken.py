@@ -3,7 +3,7 @@ import requests
 import json# Make Strava auth API call with your 
 # client_code, client_secret and code
 response = requests.post(
-                    url = 'https://www.strava.com/oauth/token',
+                    url = 'https://www.strava.com/api/v3/oauth/token',
                     data = {
                             'client_id': [INSERT_CLIENT_ID_HERE],
                             'client_secret': '[INSERT_CLIENT_SECRET_KEY]',
